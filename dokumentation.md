@@ -1,7 +1,7 @@
 # DOKUMENTATION 
-this documentation is for educational purposes only. 
+this documentation is for educational purposes only and has therefore taken help of AI. 
 
-<hr>
+___
 
 ## 1 HTML AND VIEW "RENDERING"
 ### 1.1 HTML CODE 
@@ -38,11 +38,15 @@ this documentation is for educational purposes only.
         </details>
     </main>
 ```
-The HTML file includes sections of the tag "details" which are used when displaying something a player can open and close on demand. 
-This works without the implementation of javascript. 
-There are also a lot of empty box-elements included, which take care of data taken in from javascript in later scenarios. The javascript builds up the page (*see 1.2 JAVASCRIPT HTML FUNCTIONS*). 
+The HTML file relies on native *`details`* and *`summary`* tags to create collapsible 
+sections which can be opened and closed on user command, this requires no javaScript 
+to function. 
+The file acts mainly as a skeleton, consisting of empty container elements. 
+These act as placeholders where JavaScript will dynamically build and inject
+future UI components. 
+(*see 1.2 JAVASCRIPT HTML FUNCTIONS*).
 
-<hr>
+___
 
 ### 1.2 JAVASCRIPT HTML FUNCTIONS
 A lot of whats visible within the page is created with javascript (*see 3.2 CREATE ELEMENT* or *1.2a OUTPUTTING PLAYERS*).
@@ -65,12 +69,19 @@ function playerInHtml(player) {
     return div;
 }
 ``` 
-The function initially retrieved *players* in order to know what to work with. <br>
-All elements are then created via ce (*create element, see 3.2 for further explanation*). The contents of created elements consists of information from retrieved *players* attribute. 
-In order to remove players *rmButton* is used via *removePlayer* function which sends the *player.id* in order to know exactly which played is wanted to be removed. <br>
-In order to display the created information everything is first inserted into the main box, and then returned. 
+This function accepts a single player object as an argument and builds a dedicated
+DOM element (*`div`*) for each player. 
 
-<hr>
+All nested elements are created via the function *`ce()`*, (*see 3.2 CREATE ELEMENT*). 
+Elements are populated using the properties of the passed *player* object. 
+
+For each player a remove button is created and attached to an event listener. 
+It utilizes the specific player id, in order to know which player to delete upon 
+clicks. 
+
+The assembled player container is then returned so it can be added to the page. 
+
+___
 
 ``` js
 function printPlayers(players) {
@@ -81,12 +92,17 @@ function printPlayers(players) {
     }
 }
 ```
-The function *printPlayers* is responsible for outputting each player in the array of *players*. <br>
-The contents of both functions will be placed in the empty div with the class "players" from the HTML file. 
-Everything on the page is replaced before new information is to be put out, to ensure that the page is updating live and does not contain a plethora of the same information 200x on the page. 
-Everything from the returned div in *playerInHtml* is then inserted into the picked out box, as to display it all on the page. 
+The function *printPlayers* is responsible for rendering each player from the array 
+of active players (*players*). <br>
 
-<hr>
+First, it targets the empty *`.players`* container from the HTML. 
+To ensure a reflection of current states without duplicating elements upon 
+every update, *`replaceChildren()`* is called to clear the container. 
+
+It then loops through the array of players, calling the *`playerInHtml()`* 
+function for each one, and appends the returned elements to the page.  
+
+___
 
 #### 1.2b OUTPUTTING GAME INFO 
 ``` js 
@@ -125,8 +141,23 @@ function gameInfoHtml(court, players) {
     return infoDiv;
 }
 ``` 
+This function generates a single table row (*`<tr>`*) representing one hole/court on 
+the scorecard. 
 
-<hr>
+It loops through the players array to generate a unique table cell for each 
+participant. Inside this cell, "+" and "-" buttons are created and attached to 
+listeners, which trigger functions of increase- and decrease score, passing along 
+a player id and court id. 
+
+The scoreSpan element: 
+The *`<span>`* element is used as a lightweight, inline containers that
+specifically holds the numeric score text. 
+By applying a margin of '0 6px' to the span, it physically separates the 
+"+" and "-" buttons. 
+This prevents users from accidentally clicking the wrong button, especially on smaller
+mobile screens where the table might require horizontal scrolling.  
+
+___
 
 ``` js
 async function printGameInfo(players) {
@@ -161,14 +192,18 @@ async function printGameInfo(players) {
     }
 }
 ```
+This function builds the main scorecard table. 
 
-<hr>
+It first fetches the course data (*gameInfo*), selects the target HTML container and 
+resets it. 
 
-#### 1.2c OUTPUTTING SCORES 
-``` js 
+A header row is constructed for the output of columns for 'court', followed by a dynamic column for every player's name.
+Finally, it loops through every court from the retrieved game data, calling
+*`gameInfoInHtml()`* to generate and append scoring rows for each hole. 
+___
 
-``` 
-#### 1.2d OUTPUTTING SAVED GAMES 
+#### 1.2c OUTPUTTING SCORES  
+
 ```` js 
 function displaySavedGames() {
     const savedGamesDiv = document.querySelector(".savedGames");
@@ -213,13 +248,33 @@ function displaySavedGames() {
     return savedGamesDiv;
 }
 ```` 
+The function first queries the container element for saved games from the DOM
+and clears any existing children using *`replaceChildren()`* to prevent duplicates 
+upon re-rendering. 
 
-<hr>
+Because saved games persist in local Storage (*see 2.3a SAVE GAME FUNCTION*),
+the function iterates through storage using a *for* loop. 
+Although local Storage is a key-value store rather than an array, 
+it still provides a *`.length`* property and a *`.key(index)`* method 
+for inspection of entries by index. 
+
+During each iteration, the key at the current index is checked; 
+If it does not have the *`game_`* prefix, the iteration skips over it to ignore 
+unrelated storage items (such as the currently active game). <br>
+The stored string value for matchin keys is then retrieved via *`localStorage.getItem(key)`*
+and assigned to the variable *`rawData`*. <br>
+With the use of *`JSON.parse()`* an attempt of parsing *`rawData`* is done. 
+If the parsing fails (i.e. the save is already stored as plain text), a *`try...catch`*
+block catches the error and falls back to assigning the raw string to *`gameData`*.
+
+___
 
 ## 2 JAVASCRIPT
 ### 2.1 PLAYERS 
 #### ADD A PLAYER
-In order to add a player the existent input field in HTML is used for retrieving data upon player creation. 
+
+To add a player, an event listener is attached to the html form *`.form`*.
+
 ``` js 
 document.querySelector('.addPlayer form')
     .addEventListener('submit', e => {
@@ -232,7 +287,11 @@ document.querySelector('.addPlayer form')
         addPlayer(name, scores);
     })
 ```
-All players shall have a name, which is achieved by alerting the user when the input field is not written in. Each player is then initiated with a name and an array which will contains the scores obtained in each hole (0-17 represents 18 courses/holes). 
+*`e.preventDefault()`* stops the page from realoading upon submission. 
+The input name is then retrieved, trimmed of whitespace, and has any spaces 
+replaced with underscores. If left blank, the user is alerted. 
+Otherwise, an empty scores array is initialized and passed to javascript. 
+ 
 
 ``` js
 async function addPlayer(name, scores) {
@@ -248,12 +307,15 @@ async function addPlayer(name, scores) {
     await updateGameViews(players); 
 }
 ```
-The *addPlayer* function receives the values from the input field sent in earlier.
-Yet again the program checks if a name is given, and otherwise alerts the user that a name is required for the added player. 
-A player is then created with the obtained values and an added field of id which includes the function *Date.now()*. 
-All players are then retrieved from the *getPlayers* function, if there is no player the result will be an empty array. 
-The players list then gets the current player inserted into it, which is then saved to local storage and sent to the *printPlayers* function. 
-Await ensures that our program will not kill itself if the result of *updateGameViews* is not yet retrieved. 
+A new player object is constructed containing the obtained value of the name, an empty scores array, and a unique id generated with *`Date.now()`*. 
+
+The current conten of players is retrieved via *`getPlayers()`*. 
+The new player is pushed to this array, saved back to local storage and the DOM 
+is told to re-render. 
+
+The await keyword ensures that the program pauses execution here until 
+*`updateGameViews()`* finished pulling external data and rendering 
+the complex scorecard table. 
 
 #### REMOVE PLAYER 
 ``` js
@@ -266,13 +328,16 @@ async function removePlayer(id) {
     await updateGameViews(newPlayerList);
 }
 ```
-The function retrieved the id of chosen player from the (*see 1.2a OUTPUTTING PLAYERS*) *playerInHtml* function. <br>
-The first step includes fetching the list containing all players.
-The chosen player is then found and filterd off through *filter*, the list without the player is called *newPlayerList*. 
-In order to make sure a player actually has been removed an if block checks the lengths of both lists to compare, if there are no differences no player has been deleted. <br>
-The new player list is then saved into local storage, which updates the current game information sitting in 'List'. It is also sent in to *printPlayers* to print out the updated information. Lastly the new list is passed on to *updateGameViews* so that the score system is on par with the changes. 
 
-<hr>
+
+The function retrieves the specific id of the player targeted for removal. 
+It uses the *`filter()`* method to create a *newPlayerList* containing only players
+whose ID do not match the targeted one. 
+
+It then compares the array lengths to verify that a deletion actually occurred, 
+updates local storage, and triggers render functions to update the UI. 
+
+___
 
 ### 2.2 PLAYER SCORE CONTROLS 
 #### 2.2a INCREASE PLAYER SCORE 
@@ -287,6 +352,9 @@ async function increaseScore(players, id, courtId) {
     await updateGameViews(players);
 }
 ``` 
+This function locates the correct player object by checking for an id match. 
+It checks if a score for that specific court id exists yet; if it is undefined or null,
+it initializes the score to 0. It then increments the score by 1, saves the mutated array to local storage and forces a UI update. 
 
 #### 2.2b DECREASE PLAYER SCORE 
 ``` js 
@@ -301,6 +369,12 @@ async function decreaseScore(players, id, courtId) {
     await updateGameViews(players);
 }
 ``` 
+Similar to increasing the score, this finds the player and initializes empty
+scores to 0. 
+
+A guard clause (*`if(!player.scores[courtId]) return;`*) prevents the score from
+dropping into negative numbers. 
+If the score is above zero, it is decreased by 1 and the views are updated. 
 
 #### 2.2c SHOW TOTALS ON TO THE PAGE 
 ``` js 
@@ -379,8 +453,20 @@ function showTotals(players, gameInfo) {
     return scoreTotal;
 }
 ``` 
+This function calculates the current standings and predicts final scores. 
 
-<hr>
+For each player, it iterates through the holes they have actively played 
+(*`score > 0`*). It compares their actual score against the total Par of those played
+holes to generate a performance ratio (i.e. 12 strokes on holes where Par 
+was 10, make a ratio of 1.2). 
+
+It then loops through the entire course again. If a hole has a recorded score, its
+added to the total. If a hole is unplayed, it predicts a score by multiplying the 
+hole's Par by the player's performance ratio (*`Math.round(hole.par * ratio)`*). <br>
+Finally, it filters out players who haven't played any holes, finds the lowest
+total score using *`Math.min()`*, and outputs the winner (or a tie message) to the DOM. 
+
+___
 
 ### 2.3 GAME CONTROLS 
 #### 2.3a SAVE GAME FUNCTION
@@ -390,6 +476,9 @@ function saveGame() {
     saveGameToLocalStorage(currentGameInfo);
 }
 ``` 
+The function extracts the active game state, which is temporarily stored under the
+key 'List', and passes it to the permanent save helper. 
+
 #### 2.3b LOAD THE SAVED GAME INFO 
 ``` js
 async function loadSavedGame(gameData) {
@@ -399,6 +488,9 @@ async function loadSavedGame(gameData) {
     await updateGameViews(gameData)
 }
 ```
+The function takes a retrieved game file, write it to the active 'List' storage key,
+and re-renders the UI to display the loaded data. 
+
 #### 2.3c START NEW GAME 
 
 ``` js
@@ -413,8 +505,12 @@ function startNewGame() {
     loadSavedGame(players);
 }
 ```
+This function requires user confirmation to prevent accidental resets of a game. 
 
-<hr>
+It loops through all current players, wiping their scores arrays clean and 
+re-renders the blank slate. 
+
+___
 
 ## 3 HELPER SECTION IN CLIENT.JS 
 ### 3.1 FETCHING & LOCALSTORAGE 
@@ -425,6 +521,7 @@ function saveToStorage(data) {
     localStorage.setItem('List', json);
 }
 ``` 
+This function updates the active game state. 
 
 ##### SAVE GAME TO LOCAL STORAGE 
 ``` js
@@ -445,6 +542,7 @@ function saveGameToLocalStorage(data) {
     localStorage.setItem(`game_${nameOfGame}`, data);
 }
 ```
+This function creates a permanent save file using a user-propmpted name. 
 
 #### 3.1b GAMEINFO 
 ``` js 
@@ -454,6 +552,9 @@ async function getGameInfo() {
     return card;
 }
 ``` 
+This function fetches the static course data (pars, hole, numbers) 
+from a local JSON file. 
+
 ##### TOTAL SCORES HELPER
 ``` js
 async function updateGameViews(players) {
@@ -462,6 +563,8 @@ async function updateGameViews(players) {
     showTotals(players, gameInfo);
 }
 ```
+This is a bundle function that simultaneously refreshes both the main scorecard and 
+the calculated totals section. 
 
 #### 3.1c PLAYERS 
 ``` js 
@@ -472,7 +575,9 @@ function getPlayers() {
     return list
 }
 ``` 
-
+This retrieves the active game string from storage, 
+parses it back into a javascript array, or returns an empty array 
+if nothing exists. 
 
 ### 3.2 CREATE ELEMENT 
 ``` js 
@@ -481,5 +586,6 @@ function ce(elementType, className = null) {
     if (className) el.classList.add(className);
     return el;
 }
-
 ``` 
+This function is a shorthand helper function that generates a DOM node 
+and optionally assigns it a CSS class in one step, keeping the main code cleaner. 
